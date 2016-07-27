@@ -10,7 +10,8 @@ resources:
       image: cirros-0.3.3
       flavor: m1.small
       key_name: tst-key
-        - port: { get_resource: server2_port }
+      networks:
+        - port: { get_resource: my_instance_port }
 
   my_instance_port:
     type: OS::Neutron::Port
