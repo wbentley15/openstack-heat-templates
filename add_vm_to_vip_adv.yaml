@@ -1,8 +1,8 @@
 heat_template_version: 2015-04-30
 
 description: >
-  A HOT template that holds a VM instance with an attached
-  Cinder volume.  The VM does nothing, it is only created.
+  A HOT template create instances to form three application tiers 
+  backed by Neutron LBaaS.
 
 parameters:
   key_name:

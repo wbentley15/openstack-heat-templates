@@ -1,8 +1,7 @@
 heat_template_version: 2015-04-30
 
 description: >
-  A HOT template that holds a VM instance with an attached
-  Cinder volume.  The VM does nothing, it is only created.
+  A simple template to demonstrate the Neutron LBaaS feature.
 
 parameters:
   key_name:
@@ -80,22 +79,31 @@ parameters:
     default: 80    
 
 resources:
-  lb_vip:
-    type: OS::Neutron::Pool
+  lb:
+    type: OS::Neutron::LBaaS::LoadBalancer
     properties:
-      lb_method: { get_param: pool_lbmethod }
       name: { get_param: pool_name }
       description: { get_param: pool_desc }
+      vip_address: { get_param: vip_address }
+      vip_subnet: { get_param: pool_subnet }
+      
+  lb_vip:
+    type: OS::Neutron::LBaaS::Listener
+    properties:
+      admin_state_up: True
+      loadbalancer: { get_resource: lb }
       protocol: { get_param: pool_protocol }
-      subnet: { get_param: pool_subnet }
-      vip:
-        protocol_port: { get_param: vip_protocolport }
-        admin_state_up: True
-        description: { get_param: pool_desc }
-        address: { get_param: vip_address }
-        session_persistence:
-          type: SOURCE_IP
-        subnet: { get_param: pool_subnet }
+      protocol_port: { get_param: vip_protocolport }
+
+  lb_pool:
+    type: OS::Neutron::LBaaS::Pool
+    properties: 
+      admin_state_up: True
+      lb_algorithm: { get_param: pool_lbmethod }
+      listener: { get_resource: lb_vip }
+      protocol: { get_param: pool_protocol }
+      session_persistence:
+        type: SOURCE_IP
 
   server1:
     type: OS::Nova::Server
@@ -146,19 +154,19 @@ resources:
       port_id: { get_resource: server2_port }
 
   member_server1:
-    type: OS::Neutron::PoolMember
+    type: OS::Neutron::LBaaS::PoolMember
     properties:
       address: { get_attr: [ server1_floating_ip, floating_ip_address ] }
       admin_state_up: True
-      pool_id: { get_resource: lb_vip }
+      pool: { get_resource: lb_pool }
       protocol_port: { get_param: member_protocolport }
 
   member_server2:
-    type: OS::Neutron::PoolMember
+    type: OS::Neutron::LBaaS::PoolMember
     properties:
       address: { get_attr: [ server2_floating_ip, floating_ip_address ] }
       admin_state_up: True
-      pool_id: { get_resource: lb_vip }
+      pool: { get_resource: lb_pool }
       protocol_port: { get_param: member_protocolport }
 
 outputs:
