@@ -1,0 +1,13 @@
+parameters:
+  key_name: tst-key
+  flavor: m1.small
+  flavor_app: m1.medium
+  flavor_db: m1.large
+  image: ubuntu-server-14.04
+  public_net_id: b80d08d0-eae2-4fdb-bb12-7fe8608dddf4
+  private_net_id: 285fa01c-b1ea-4326-a82c-2d75788bb9d4
+  private_subnet_id: 40b9ff4e-7a73-495e-b290-33f0f3a059aa
+  pool_desc: web front end
+  pool_name: web-lb-pool
+  pool_subnet: subnet-public-net
+  vip_address: 172.29.240.50 

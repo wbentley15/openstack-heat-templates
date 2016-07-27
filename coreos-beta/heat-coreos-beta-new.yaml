@@ -1,0 +1,78 @@
+heat_template_version: 2013-05-23
+
+description: Deploy a CoreOS cluster that tracks the Beta Channel
+
+parameters:
+  vm-num:
+    description: Number of CoreOS machines to deploy
+    type: number
+    default: 3
+    constraints:
+    - range:
+        min: 3
+        max: 12
+      description: Must be between 3 and 12 servers.
+  key-name:
+    type: string
+    description: Name of key-pair to be used for compute instance
+  flavor:
+    type: string
+    default: m1.small
+    constraints:
+    - allowed_values:
+      - m1.small
+      - m1.medium
+      - m1.large
+      description: |
+        Must be a valid Rackspace Cloud Server flavor for the region you have
+        selected to deploy into.
+  image:
+    type: string
+    description: Image name
+    default: coreos-beta
+  user-data:
+    type: string
+    description: |
+      Formatted user_data containing cloud-config or a script to run on boot.
+  name:
+    type: string
+    description: Name of each CoreOS machine booted
+    default: CoreOS-beta
+  network:
+    type: string
+    description: The network for the VM
+    constraints:
+      - custom_constraint: neutron.network
+
+resources:
+  machines:
+    type: "OS::Heat::ResourceGroup"
+    properties:
+        count: { get_param: vm-num }
+        resource_def:
+          type: OS::Nova::Server
+          properties:
+            key_name: { get_param: key-name }
+            image: { get_param: image }
+            flavor: { get_param: flavor }
+            name: { get_param: name }
+            config_drive: "true"
+            user_data: { get_param: user-data }
+            networks: [{network: {get_param: network} }]
+  
+  app_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Add security group rules for server
+      name: appsecgroup
+      rules:
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 22
+          port_range_max: 22
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 8080
+          port_range_max: 8080
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp

@@ -1,0 +1,176 @@
+heat_template_version: 2015-04-30
+
+description: >
+  A HOT template that holds a VM instance with an attached
+  Cinder volume.  The VM does nothing, it is only created.
+
+parameters:
+  key_name:
+    type: string
+    description: Name of an existing key pair to use for the instance
+    constraints:
+      - custom_constraint: nova.keypair
+        description: Must name a public key (pair) known to Nova
+  flavor:
+    type: string
+    description: Flavor for the instance to be created
+    default: m1.small
+    constraints:
+      - custom_constraint: nova.flavor
+        description: Must be a flavor known to Nova
+  image:
+    type: string
+    description: >
+      Name or ID of the image to use for the instance.
+      You can get the default from
+      http://cloud.fedoraproject.org/fedora-20.x86_64.qcow2
+      There is also
+      http://cloud.fedoraproject.org/fedora-20.i386.qcow2
+      Any image should work since this template
+      does not ask the VM to do anything.
+    constraints:
+      - custom_constraint: glance.image
+        description: Must identify an image known to Glance
+  secgroup:
+    type: string
+    description: Name of security group to assign instances to
+    default: web
+  public_net_id:
+    type: string
+    description: >
+      ID of public network for which floating IP addresses will be allocated
+    constraints:
+      - custom_constraint: neutron.network
+  private_net_id:
+    type: string
+    description: ID of private network into which servers get deployed
+    constraints:
+      - custom_constraint: neutron.network
+  private_subnet_id:
+    type: string
+    description: ID of private sub network into which servers get deployed
+  pool_name:
+    type: string
+    description: Name of the pool being created
+  pool_desc:
+    type: string
+    description: Description for the pool
+  pool_subnet:
+    type: string
+    description: >
+      ID of the network on which the members of the pool will be connected
+  pool_protocol:
+    type: string
+    description: The protocol used for balancing
+    default: HTTP
+  pool_lbmethod:
+    type: string
+    description: Balancing algorithm to distribute traffic
+    default: ROUND_ROBIN 
+  vip_address:
+    type: string
+    description: IP address for the vip
+  vip_protocolport:
+    type: number
+    description: TCP port to listen for client traffic
+    default: 80
+  member_protocolport:
+    type: number
+    description: TCP port on which pool member listens
+    default: 80    
+
+resources:
+  lb_vip:
+    type: OS::Neutron::Pool
+    properties:
+      lb_method: { get_param: pool_lbmethod }
+      name: { get_param: pool_name }
+      description: { get_param: pool_desc }
+      protocol: { get_param: pool_protocol }
+      subnet: { get_param: pool_subnet }
+      vip:
+        protocol_port: { get_param: vip_protocolport }
+        admin_state_up: True
+        description: { get_param: pool_desc }
+        address: { get_param: vip_address }
+        session_persistence:
+          type: SOURCE_IP
+        subnet: { get_param: pool_subnet }
+
+  server1:
+    type: OS::Nova::Server
+    properties:
+      name: web1
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      networks:
+        - port: { get_resource: server1_port }
+
+  server1_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: private_net_id }
+      fixed_ips:
+        - subnet_id: { get_param: private_subnet_id }
+      security_groups: [{ get_param: secgroup }]
+
+  server1_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network_id: { get_param: public_net_id }
+      port_id: { get_resource: server1_port }
+
+  server2:
+    type: OS::Nova::Server
+    properties:
+      name: web2
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      networks:
+        - port: { get_resource: server2_port }
+
+  server2_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: private_net_id }
+      fixed_ips:
+        - subnet_id: { get_param: private_subnet_id }
+      security_groups: [{ get_param: secgroup }]
+
+  server2_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network_id: { get_param: public_net_id }
+      port_id: { get_resource: server2_port }
+
+  member_server1:
+    type: OS::Neutron::PoolMember
+    properties:
+      address: { get_attr: [ server1_floating_ip, floating_ip_address ] }
+      admin_state_up: True
+      pool_id: { get_resource: lb_vip }
+      protocol_port: { get_param: member_protocolport }
+
+  member_server2:
+    type: OS::Neutron::PoolMember
+    properties:
+      address: { get_attr: [ server2_floating_ip, floating_ip_address ] }
+      admin_state_up: True
+      pool_id: { get_resource: lb_vip }
+      protocol_port: { get_param: member_protocolport }
+
+outputs:
+  server1_id:
+    value: { get_resource: server1 }
+  server1_nets:
+    value: { get_attr: [server1, addresses] }
+  pool_member_server1_id:
+    value: { get_resource: member_server1 }
+  server2_id:
+    value: { get_resource: server2 }
+  server2_nets:
+    value: { get_attr: [server2, addresses] }
+  pool_member_server2_id:
+    value: { get_resource: member_server2 }

@@ -1,0 +1,6 @@
+parameters:
+  flavor: m1.medium
+  network: private
+  image: centos-6.5
+  vol_size: 10
+  key_name: controller-key

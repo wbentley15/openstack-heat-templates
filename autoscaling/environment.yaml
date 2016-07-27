@@ -1,0 +1,2 @@
+resource_registry:  
+    "OS::Nova::Server::IUL": "instance_underload.yaml"

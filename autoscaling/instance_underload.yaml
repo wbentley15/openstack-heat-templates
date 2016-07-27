@@ -1,0 +1,17 @@
+heat_template_version: 2013-05-23
+
+description: >
+  A HOT template to spin up an cirros instance.
+
+resources:
+  my_instance:
+    type: OS::Nova::Server
+    properties:
+      image: cirros-0.3.3
+      flavor: m1.small
+      networks: [{network: f7bfe6e1-41e6-4aaf-b2a5-746645b79fbd }]
+      user_data_format: RAW
+      user_data: |
+        #!/bin/sh
+        while [ 1 ] ; do echo $((13**99)) 1>/dev/null 2>&1; done
+
