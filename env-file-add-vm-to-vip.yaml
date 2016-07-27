@@ -8,4 +8,4 @@ parameters:
   pool_desc: web front end
   pool_name: web-lb-pool
   pool_subnet: subnet-public-network
-  vip_address: 172.29.240.50 
+  vip_address: 203.0.113.100 
