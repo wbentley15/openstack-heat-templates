@@ -1,7 +1,7 @@
 parameters:
   key_name: tst-key
   flavor: m1.small
-  image: ubuntu-server-14.04
+  image: cirros-0.3.3
   public_net_id: 9e2f76c7-aa81-4a28-9f0c-4f83aa166e12
   public_subnet_id: 7cf6acb9-b38b-49c9-ac3b-243c2a0b58a2
   private_net_id: ac238ebc-ad81-406d-a4cd-837aada2ec33
