@@ -40,6 +40,9 @@ parameters:
       ID of public network for which floating IP addresses will be allocated
     constraints:
       - custom_constraint: neutron.network
+  public_subnet_id:
+    type: string
+    description: ID of public sub network into which servers get deployed
   private_net_id:
     type: string
     description: ID of private network into which servers get deployed
@@ -158,6 +161,7 @@ resources:
     properties:
       address: { get_attr: [ server1_floating_ip, floating_ip_address ] }
       admin_state_up: True
+      subnet: { get_param: public_subnet_id }
       pool: { get_resource: lb_pool }
       protocol_port: { get_param: member_protocolport }
 
@@ -166,6 +170,7 @@ resources:
     properties:
       address: { get_attr: [ server2_floating_ip, floating_ip_address ] }
       admin_state_up: True
+      subnet: { get_param: public_subnet_id }
       pool: { get_resource: lb_pool }
       protocol_port: { get_param: member_protocolport }
 
