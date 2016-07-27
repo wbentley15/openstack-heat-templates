@@ -102,6 +102,7 @@ resources:
     type: OS::Neutron::LBaaS::Pool
     properties: 
       admin_state_up: True
+      name: webpool
       lb_algorithm: { get_param: pool_lbmethod }
       listener: { get_resource: lb_vip }
       protocol: { get_param: pool_protocol }

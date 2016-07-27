@@ -9,9 +9,29 @@ resources:
     properties:
       image: cirros-0.3.3
       flavor: m1.small
-      networks: [{network: f7bfe6e1-41e6-4aaf-b2a5-746645b79fbd }]
-      user_data_format: RAW
-      user_data: |
-        #!/bin/sh
-        while [ 1 ] ; do echo $((13**99)) 1>/dev/null 2>&1; done
+      key_name: tst-key
+        - port: { get_resource: server2_port }
+
+  my_instance_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: ac238ebc-ad81-406d-a4cd-837aada2ec33
+      fixed_ips:
+        - subnet_id: 469340d9-8745-4f66-a159-86c5f088f92d
+      security_groups: [ web ]
+
+  my_instance_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network_id: 9e2f76c7-aa81-4a28-9f0c-4f83aa166e12
+      port_id: { get_resource: my_instance_port }
+
+  pool_member:
+    type: OS::Neutron::LBaaS::PoolMember
+    properties:
+      address: { get_attr: [ my_instance_floating_ip, floating_ip_address ] }
+      admin_state_up: True
+      subnet: 7cf6acb9-b38b-49c9-ac3b-243c2a0b58a2
+      pool: webpool
+      protocol_port: 80
 

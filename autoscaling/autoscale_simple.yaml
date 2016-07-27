@@ -5,7 +5,7 @@ resources:
     type: OS::Heat::AutoScalingGroup
     properties:
       cooldown: 60
-      desired_capacity: 2
+      desired_capacity: 1
       max_size: 5
       min_size: 1
       resource:
