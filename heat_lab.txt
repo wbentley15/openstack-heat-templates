@@ -44,7 +44,7 @@ neutron net-create private-network --shared
 neutron subnet-create private-network --name subnet-private --gateway 10.1.101.1 10.1.101.0/24
 
 # Create a public network
-neutron net-create --shared --provider:physical_network vlan --provider:network_type vlan --provider:segmentation_id 1 public-network
+neutron net-create --shared --router:external --provider:physical_network vlan --provider:network_type vlan --provider:segmentation_id 1 public-network
 
 neutron subnet-create public-network --name subnet-public --allocation-pool start=203.0.113.101,end=203.0.113.200 --disable-dhcp --gateway 203.0.113.1 203.0.113.0/24
 
