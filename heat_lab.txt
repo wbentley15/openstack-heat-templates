@@ -3,6 +3,9 @@ You should now be at a command prompt that looks like this:
 root@082108-allinone:/opt/openstack-ansible/playbooks# 
 ******************************************************************
 
+# Become root user
+sudo su
+
 # Execute the following command to discover the Utility container IP
 lxc-ls --fancy |grep utility
 
@@ -26,10 +29,14 @@ wget -O /opt/coreos-beta http://657a93671c60940479c9-f7fc23ef60c7220824e6d618c14
 
 wget -O /opt/ubuntu-server-14.04 http://cloud-images.ubuntu.com/trusty/current/trusty-server-cloudimg-amd64-disk1.img
 
+wget -O /opt/cirros-0.3.3 http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img
+
 # Create glance images from the previously downloaded images
 glance image-create --name coreos-beta --visibility public --container-format bare --disk-format qcow2 --file /opt/coreos-beta
 
 glance image-create --name ubuntu-server-14.04 --visibility public --container-format bare --disk-format qcow2 --file /opt/ubuntu-server-14.04
+
+glance image-create --name cirros-0.3.3 --visibility public --container-format bare --disk-format qcow2 --file cirros-0.3.3-x86_64-disk.img
 
 # Create a private network
 neutron net-create private-network --shared
@@ -37,9 +44,16 @@ neutron net-create private-network --shared
 neutron subnet-create private-network --name subnet-private --gateway 10.1.101.1 10.1.101.0/24
 
 # Create a public network
-neutron net-create public-net --shared --router:external --provider:physical_network external --provider:network_type flat
+neutron net-create --shared --provider:physical_network vlan --provider:network_type vlan --provider:segmentation_id 1 public-network
 
-neutron subnet-create public-net --name subnet-public-net --allocation-pool start=203.0.113.101,end=203.0.113.200 --disable-dhcp --gateway 203.0.113.1 203.0.113.0/24
+neutron subnet-create public-network --name subnet-public --allocation-pool start=203.0.113.101,end=203.0.113.200 --disable-dhcp --gateway 203.0.113.1 203.0.113.0/24
+
+# Create router to connect the two networks
+neutron router-create tst-router
+
+neutron router-interface-add tst-router subnet-private
+
+neutron router-gateway-set tst-router public-network
 
 # List the available images and networks (please take note of this information for later)
 openstack image list
@@ -58,9 +72,12 @@ ls -la
 # Create your first Stack (you must append your private network ID to the request)
 heat stack-create coreos-test --template-file=coreos-beta/heat-coreos-beta.yaml --parameters="vm-num=3;key-name=tst-key;flavor=m1.small;user-data=coreos-config.txt;network=<private network ID>;name=coreos-beta"
 
-# Create Stacks from the two templates listed below via Horizon (Optional - you can use the matching environment file to speed things along):
+# Create Stacks from the three templates listed below via Horizon (Optional - you can use the matching environment file to speed things along):
+
+vm_with_cinder.yaml
 
 openstack_hot_demo.yaml  (environment file: env-file-demo.yaml)
+
 add_vm_to_vip.yaml	(environment file: env-file-add-vm-to-vip.yaml)
 
 
