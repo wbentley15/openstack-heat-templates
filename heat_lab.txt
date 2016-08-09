@@ -21,8 +21,11 @@ ssh <utility container IP>
 # Source OpenStack credentials file
 source openrc
 
+# Clone lab repo
+git clone https://github.com/wbentley15/openstack-heat-templates.git
+
 # Add a new key pair to the cloud
-nova keypair-add --pub-key /opt/id_rsa.pub tst-key  
+nova keypair-add --pub-key openstack-heat-templates/key.pub tst-key  
 
 # Download the Ubuntu and CoreOS images
 wget -O /opt/coreos-beta http://657a93671c60940479c9-f7fc23ef60c7220824e6d618c141b70b.r51.cf5.rackcdn.com/alpha_coreos_production_openstack_image.img
@@ -60,9 +63,6 @@ openstack image list
 
 openstack network list
 
-# Clone lab repo
-git clone https://github.com/wbentley15/openstack-heat-templates.git
-
 # Change into the working directory
 cd openstack-heat-templates
 
@@ -80,6 +80,14 @@ openstack_hot_demo.yaml  (environment file: env-file-demo.yaml)
 
 add_vm_to_vip.yaml	(environment file: env-file-add-vm-to-vip.yaml)
 
+# Within the openstack-heat-templates directory exists other Heat templates examples, please see the list below:
+add_host_aggregate.yaml	- creates host aggregate and adds hosts to the aggregate created
+add_user.yaml - creates new user assigned to a project and domain
+add_vm_to_vip_adv.yam - simulates a three tier app deployment by creating web, app and db instances with LB
+vm-autorecovery.yaml - simulates a stack to recover an instance based on ceilometer stats
+vm_with_cinder_install_apache.yaml - example of creating an instance and installing/configuring application
+autoscaling/autoscaling.yaml - examples of autoscaling using Heat, LBaas and Ceilometer
+autoscaling/autoscale_simple.yaml, autoscaling/instance_underload.yaml
 
 # Close connection to the lab server
 exit
