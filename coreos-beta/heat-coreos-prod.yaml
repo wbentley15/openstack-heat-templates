@@ -1,6 +1,6 @@
 heat_template_version: 2013-05-23
 
-description: Deploy a CoreOS cluster that tracks the Beta Channel
+description: Deploy a CoreOS cluster for Production
 
 parameters:
   vm-num:
@@ -17,19 +17,19 @@ parameters:
     description: Name of key-pair to be used for compute instance
   flavor:
     type: string
-    default: m1.small
+    default: m1.medium
     constraints:
     - allowed_values:
       - m1.small
       - m1.medium
       - m1.large
       description: |
-        Must be a valid Rackspace Cloud Server flavor for the region you have
+        Must be a valid OpenStack flavor for the region you have
         selected to deploy into.
   image:
     type: string
     description: Image name
-    default: coreos-beta
+    default: CoreOS
   user-data:
     type: string
     description: |
@@ -37,10 +37,10 @@ parameters:
   name:
     type: string
     description: Name of each CoreOS machine booted
-    default: CoreOS-beta
+    default: CoreOS-prod
   network:
     type: string
-    description: The network for the VM
+    description: The network for the cluster instances
     constraints:
       - custom_constraint: neutron.network
 
